@@ -34,6 +34,9 @@ IPAddress myIP;        // IP address in your local wifi net
 /* The 'index' page flag ------------------------------------------------------*/
 bool isIndexPage = true; // true : GET  request, client needs 'index' page;
 // false: POST request, server sends empty page.
+
+bool isDisplayUpdateRunning = false;
+
 /* Server initialization -------------------------------------------------------*/
 void Srvr__setup()
 {
@@ -143,6 +146,7 @@ bool Srvr__loop()
 
         // Requests of files
         if (Buff__bufInd >= 11) {
+			isDisplayUpdateRunning = true;
             if (Buff__signature(Buff__bufInd - 11, "/styles.css"))
                 return Srvr__file(client, 0, "styles.css");
 
@@ -225,6 +229,7 @@ bool Srvr__loop()
                 //Print log message: show
                 Serial.print("\r\nSHOW");
                 //client.print("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n");
+				isDisplayUpdateRunning = false;
                 break;
             }
 
