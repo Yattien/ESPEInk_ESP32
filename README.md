@@ -8,7 +8,7 @@ Erweiterung des ESP32-Waveshare-Treibers um Wifi-Einrichtungsassistent, Deepslee
 [19.02.2020](https://www.waveshare.com/wiki/File:E-Paper_ESP32_Driver_Board_Code.7z)
 
 # Installation
-Das fertige Image kann per OTA (siehe auch OTA-Beispiel-Sketche) oder auch per [`esptool`](https://github.com/espressif/esptool) auf den ESP8266 geladen werden.
+Das fertige Image kann per OTA (siehe auch OTA-Beispiel-Sketche) oder auch per [`esptool`](https://github.com/espressif/esptool) auf den ESP32 geladen werden.
 
 # Features
 * **Einrichtungsmanager** für WiFi, MQTT und Deepsleep-Zeit
