@@ -23,7 +23,7 @@
 #include "srvr.h" // Server functions
 
 // -----------------------------------------------------------------------------------------------------
-const int FW_VERSION = 2; // for OTA
+const int FW_VERSION = 3; // for OTA
 // -----------------------------------------------------------------------------------------------------
 const char *AP_NAME = "ESPEInk-APSetup";
 const char *MQTT_CLIENT_NAME = "ESPEInk";
@@ -46,10 +46,10 @@ void setup() {
 
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, LOW);
-	getConfig(&ctx);
+	getConfig();
 
 	ctx.initWifiManagerParameters();
-	setupWifi(ctx);
+	setupWifi();
 	ctx.updateParameters();
 	isMqttEnabled = ctx.isMqttEnabled();
 
@@ -58,7 +58,7 @@ void setup() {
 	Serial.printf(" MQTT CommandTopic: %s\r\n", ctx.mqttCommandTopic);
 	Serial.printf(" sleep time: %ld\r\n", ctx.sleepTime);
 	Serial.printf(" firmware base URL: %s\r\n", ctx.firmwareUrl);
-	saveConfig(ctx);
+	saveConfig();
 
 	getUpdate();
 
@@ -73,7 +73,7 @@ void setup() {
 }
 
 // -----------------------------------------------------------------------------------------------------
-void getConfig(Ctx *ctx) {
+void getConfig() {
 	if (SPIFFS.begin()) {
 		if (SPIFFS.exists(CONFIG_FILE)) {
 			Serial.println("Reading config file");
@@ -82,12 +82,12 @@ void getConfig(Ctx *ctx) {
 				DynamicJsonDocument jsonDocument(512);
 				DeserializationError error = deserializeJson(jsonDocument, configFile);
 				if (!error) {
-					strlcpy(ctx->mqttServer, jsonDocument["mqttServer"] | "", sizeof ctx->mqttServer);
-					ctx->mqttPort = jsonDocument["mqttPort"] | 1883;
-					strlcpy(ctx->mqttUpdateStatusTopic, jsonDocument["mqttUpdateStatusTopic"] | "", sizeof ctx->mqttUpdateStatusTopic);
-					strlcpy(ctx->mqttCommandTopic, jsonDocument["mqttCommandTopic"] | "", sizeof ctx->mqttCommandTopic);
-					ctx->sleepTime = jsonDocument["sleepTime"] | 0;
-					strlcpy(ctx->firmwareUrl, jsonDocument["firmwareUrl"] | "", sizeof ctx->firmwareUrl);
+					strlcpy(ctx.mqttServer, jsonDocument["mqttServer"] | "", sizeof ctx.mqttServer);
+					ctx.mqttPort = jsonDocument["mqttPort"] | 1883;
+					strlcpy(ctx.mqttUpdateStatusTopic, jsonDocument["mqttUpdateStatusTopic"] | "", sizeof ctx.mqttUpdateStatusTopic);
+					strlcpy(ctx.mqttCommandTopic, jsonDocument["mqttCommandTopic"] | "", sizeof ctx.mqttCommandTopic);
+					ctx.sleepTime = jsonDocument["sleepTime"] | 0;
+					strlcpy(ctx.firmwareUrl, jsonDocument["firmwareUrl"] | "", sizeof ctx.firmwareUrl);
 
 				} else {
 					Serial.println(" failed to load json config");
@@ -101,9 +101,9 @@ void getConfig(Ctx *ctx) {
 }
 
 // -----------------------------------------------------------------------------------------------------
-void setupWifi(const Ctx &ctx) {
+void setupWifi() {
 	WiFiManager wifiManager;
-	requestMqttParameters(ctx, &wifiManager);
+	requestMqttParameters(&wifiManager);
 	if (!wifiManager.autoConnect(AP_NAME)) {
 		Serial.println("failed to connect, resetting");
 		WiFi.disconnect();
@@ -114,7 +114,7 @@ void setupWifi(const Ctx &ctx) {
 }
 
 // -----------------------------------------------------------------------------------------------------
-void requestMqttParameters(const Ctx &ctx, WiFiManager *wifiManager) {
+void requestMqttParameters(WiFiManager *wifiManager) {
 	wifiManager->addParameter(ctx.customMqttServer);
 	wifiManager->addParameter(ctx.customMqttPort);
 	wifiManager->addParameter(ctx.customMqttUpdateStatusTopic);
@@ -125,7 +125,7 @@ void requestMqttParameters(const Ctx &ctx, WiFiManager *wifiManager) {
 }
 
 // -----------------------------------------------------------------------------------------------------
-void saveConfig(const Ctx &ctx) {
+void saveConfig() {
 	if (shouldSaveConfig) {
 		Serial.println("Saving config...");
 		if (!SPIFFS.begin(false)) {
