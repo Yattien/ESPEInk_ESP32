@@ -38,6 +38,18 @@ Da ich bereits viele Libs in meiner Arduino-Bauumgebung habe und diese somit nic
 * [WebServer-ESP32](https://github.com/zhouhan0126/WebServer-esp32)
 * ?
 
+# Pin-Belegung ESP32 Devkit v1
+e-Paper HAT|GPIO ESP32
+--------------|---|--------
+CLK|13
+DIN|14
+CS|15
+BUSY|25
+RST|26
+DC|27
+GND|GND
+VCC|3.3V
+
 # MQTT-Szenario
 Im Zusammenspiel mit dem FHEM-Modul `ESPEInk` kann man das EInk-Display dazu bringen, weniger Strom zu verbrauchen. Dazu kann man so vorgehen:
 * das Attribut `interval` in ESPEInk steht auf einem hohen Wert, da kein automatischer Upload erfolgen soll (noch notwendiger Workaround)
