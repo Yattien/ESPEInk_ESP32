@@ -40,7 +40,7 @@ Da ich bereits viele Libs in meiner Arduino-Bauumgebung habe und diese somit nic
 
 # Pin-Belegung ESP32 Devkit v1
 e-Paper HAT|GPIO ESP32
---------------|---|--------
+-----------|----------
 CLK|13
 DIN|14
 CS|15
