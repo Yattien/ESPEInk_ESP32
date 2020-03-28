@@ -1,6 +1,7 @@
 # ESPEInk_ESP32
 Erweiterung des ESP32-Waveshare-Treibers um Wifi-Einrichtungsassistent, Deepsleep und MQTT-Funktionalität als Ergänzung zum FHEM-Modul `ESPEInk`.
 
+![GitHub](https://img.shields.io/github/license/Yattien/ESPEInk_ESP32)
 [![GitHub release](https://img.shields.io/github/v/release/Yattien/ESPEInk_ESP32?include_prereleases)](https://github.com/Yattien/ESPEInk_ESP32/releases)
 ![GitHub All Releases](https://img.shields.io/github/downloads/Yattien/ESPEInk_ESP32/total)
 
