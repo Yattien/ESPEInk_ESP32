@@ -23,18 +23,18 @@
 #include "srvr.h" // Server functions
 
 // -----------------------------------------------------------------------------------------------------
-const int FW_VERSION = 3; // for OTA
+const int FW_VERSION = 4; // for OTA
 // -----------------------------------------------------------------------------------------------------
-const char *AP_NAME = "ESPEInk-APSetup";
 const char *CONFIG_FILE = "/config.json";
 const float TICKS_PER_SECOND = 80000000; // 80 MHz processor
+const int UPTIME_SEC = 10;
 //int LED_BUILTIN = 2;
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
+char accessPointName[24];
 bool shouldSaveConfig = false;
-bool isUpdateAvailable = false;
 bool isMqttEnabled = false;
 
 Ctx ctx;
@@ -102,6 +102,11 @@ void getConfig() {
 }
 
 // -----------------------------------------------------------------------------------------------------
+void initAccessPointName() {
+	sprintf(accessPointName, "ESPEInk-AP-%s", getMAC().c_str());
+}
+
+// -----------------------------------------------------------------------------------------------------
 void initMqttClientName() {
 	if (!strlen(ctx.mqttClientName)) {
 		sprintf(ctx.mqttClientName, "ESPEInk_%s", getMAC().c_str());
@@ -112,7 +117,8 @@ void initMqttClientName() {
 void setupWifi() {
 	WiFiManager wifiManager;
 	requestMqttParameters(&wifiManager);
-	if (!wifiManager.autoConnect(AP_NAME)) {
+	initAccessPointName();
+	if (!wifiManager.autoConnect(accessPointName)) {
 		Serial.println("failed to connect, resetting");
 		WiFi.disconnect();
 		delay(1000);
@@ -261,6 +267,21 @@ void callback(char* topic, byte* message, unsigned int length) {
 }
 
 // -----------------------------------------------------------------------------------------------------
+void disconnect() {
+	if (mqttClient.connected()) {
+		Serial.println("Disconnecting from MQTT...");
+		boolean rc = mqttClient.unsubscribe(ctx.mqttUpdateStatusTopic);
+		if (rc) {
+			Serial.printf(" unsubscribed from %s\r\n", ctx.mqttUpdateStatusTopic);
+		} else {
+			Serial.printf(" unsubscription from %s failed: %d\r\n", ctx.mqttUpdateStatusTopic, rc);
+		}
+		mqttClient.disconnect();
+		delay(100);
+	}
+}
+
+// -----------------------------------------------------------------------------------------------------
 void reconnect() {
 	Serial.println("Connecting to MQTT...");
 	while (!mqttClient.connected()) {
@@ -280,12 +301,16 @@ void reconnect() {
 
 // -----------------------------------------------------------------------------------------------------
 void loop() {
-	if (isMqttEnabled && !mqttClient.connected()) {
+	if (!isDisplayUpdateRunning && isMqttEnabled && !mqttClient.connected()) {
 		reconnect();
 		Serial.println(" reconnected, waiting for incoming MQTT message");
 		// get max 100 messages
 		for (int i = 0; i < 100; ++i) {
 			mqttClient.loop();
+			delay(10);
+		}
+		if (!isUpdateAvailable) {
+			Serial.println(" no update available");
 		}
 	}
 
@@ -306,6 +331,8 @@ void loop() {
 
 			if (isUpdateAvailable) {
 				mqttClient.publish(ctx.mqttCommandTopic, "true");
+				delay(100);
+				disconnect();
 			}
 			Serial.printf("Webserver started, waiting %sfor updates\r\n", isMqttEnabled ? "" : "10s ");
 
@@ -325,22 +352,25 @@ void loop() {
 	}
 
 	bool isTimeToSleep = false;
-	if (!isTimeToSleep && ctx.sleepTime > 0) { // check if 10 seconds have passed
-		if (difference > 10 * TICKS_PER_SECOND) {
-			isTimeToSleep = true;
-		}
+	if (isMqttEnabled && !isUpdateAvailable) {
+		isTimeToSleep = true;
 
-	} else if (!isTimeToSleep && isMqttEnabled) {
-		if (isMqttEnabled) {
-			mqttClient.disconnect();
-			delay(100);
-		}
+	} else if (difference > UPTIME_SEC * TICKS_PER_SECOND) {
 		isTimeToSleep = true;
 	}
 
-	if (!isDisplayUpdateRunning && isTimeToSleep) {
-		Serial.printf("Going to sleep for %ld seconds.\r\n", ctx.sleepTime);
-		ESP.deepSleep(ctx.sleepTime * 1000000);
-		delay(100);
+	if (!isDisplayUpdateRunning) {
+		if (isTimeToSleep) {
+			if (ctx.sleepTime > 0) {
+				disconnect();
+				Serial.printf("Going to sleep for %ld seconds.\r\n", ctx.sleepTime);
+				ESP.deepSleep(ctx.sleepTime * 1000000);
+				delay(100);
+
+			} else { // avoid overheating
+				startCycle = ESP.getCycleCount();
+				delay(1000);
+			}
+		}
 	}
 }

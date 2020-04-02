@@ -36,6 +36,7 @@ bool isIndexPage = true; // true : GET  request, client needs 'index' page;
 // false: POST request, server sends empty page.
 
 bool isDisplayUpdateRunning = false;
+bool isUpdateAvailable = false;
 
 /* Server initialization -------------------------------------------------------*/
 void Srvr__setup()
@@ -147,6 +148,7 @@ bool Srvr__loop()
         // Requests of files
         if (Buff__bufInd >= 11) {
 			isDisplayUpdateRunning = true;
+			isUpdateAvailable = false;
             if (Buff__signature(Buff__bufInd - 11, "/styles.css"))
                 return Srvr__file(client, 0, "styles.css");
 
