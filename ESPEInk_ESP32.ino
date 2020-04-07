@@ -23,7 +23,7 @@
 #include "srvr.h" // Server functions
 
 // -----------------------------------------------------------------------------------------------------
-const int FW_VERSION = 4; // for OTA
+const int FW_VERSION = 4 // for OTA
 // -----------------------------------------------------------------------------------------------------
 const char *CONFIG_FILE = "/config.json";
 const float TICKS_PER_SECOND = 80000000; // 80 MHz processor
@@ -65,9 +65,7 @@ void setup() {
 	EPD_initSPI();
 
 	myIP = WiFi.localIP();
-
-	mqttClient.setServer(ctx.mqttServer, ctx.mqttPort);
-	mqttClient.setCallback(callback);
+	setupMqtt();
 
 	Serial.println("Setup complete.");
 }
@@ -191,10 +189,10 @@ String getMAC() {
 
 // -----------------------------------------------------------------------------------------------------
 void factoryReset() {
-	Serial.println("Resetting device...");
+	Serial.println("Resetting WLAN settings...");
 	WiFi.mode(WIFI_STA);
 	WiFi.disconnect(true, true);
-	delay(10000);
+	delay(1000);
 	ESP.restart();
 }
 
@@ -250,6 +248,12 @@ void getUpdate() {
 }
 
 // -----------------------------------------------------------------------------------------------------
+void setupMqtt() {
+	mqttClient.setServer(ctx.mqttServer, ctx.mqttPort);
+	mqttClient.setCallback(callback);
+}
+
+// -----------------------------------------------------------------------------------------------------
 void callback(char* topic, byte* message, unsigned int length) {
 	String messageTemp;
 
@@ -270,12 +274,6 @@ void callback(char* topic, byte* message, unsigned int length) {
 void disconnect() {
 	if (mqttClient.connected()) {
 		Serial.println("Disconnecting from MQTT...");
-		boolean rc = mqttClient.unsubscribe(ctx.mqttUpdateStatusTopic);
-		if (rc) {
-			Serial.printf(" unsubscribed from %s\r\n", ctx.mqttUpdateStatusTopic);
-		} else {
-			Serial.printf(" unsubscription from %s failed: %d\r\n", ctx.mqttUpdateStatusTopic, rc);
-		}
 		mqttClient.disconnect();
 		delay(100);
 	}
@@ -323,7 +321,9 @@ void loop() {
 		difference = (currentCycle - startCycle);
 	}
 
-	if ((isMqttEnabled && isUpdateAvailable) || !isMqttEnabled) {
+	if ((isMqttEnabled && isUpdateAvailable)
+			|| (isMqttEnabled && isDisplayUpdateRunning)
+			|| !isMqttEnabled) {
 		static bool serverStarted = false;
 		if (!serverStarted) {
 			server.begin();
