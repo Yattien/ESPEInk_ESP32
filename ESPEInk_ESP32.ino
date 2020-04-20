@@ -23,7 +23,7 @@
 #include "srvr.h" // Server functions
 
 // -----------------------------------------------------------------------------------------------------
-const int FW_VERSION = 4 // for OTA
+const int FW_VERSION = 4; // for OTA
 // -----------------------------------------------------------------------------------------------------
 const char *CONFIG_FILE = "/config.json";
 const float TICKS_PER_SECOND = 80000000; // 80 MHz processor
