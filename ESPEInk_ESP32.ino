@@ -28,7 +28,7 @@ const int FW_VERSION = 4; // for OTA
 const char *CONFIG_FILE = "/config.json";
 const float TICKS_PER_SECOND = 80000000; // 80 MHz processor
 const int UPTIME_SEC = 10;
-//int LED_BUILTIN = 2;
+int LED_BUILTIN = 2; // neeed to be defined for board "ESP32 Dev Module" - comment it for "ESP32 Devkit v1"
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
