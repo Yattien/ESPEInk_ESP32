@@ -18,6 +18,7 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <SPIFFS.h>
+#include <rom/rtc.h>
 #include "ctx.h"
 
 #include "srvr.h" // Server functions
@@ -42,6 +43,8 @@ Ctx ctx;
 // -----------------------------------------------------------------------------------------------------
 void setup() {
 	Serial.begin(115200);
+	Serial.println("\r\nESPEInk_ESP32 v" + String(FW_VERSION) + ", reset reason='" + (int)rtc_get_reset_reason(0) + "'...");
+	Serial.println("Entering setup...");
 
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, LOW);
@@ -53,11 +56,12 @@ void setup() {
 	ctx.updateParameters();
 	isMqttEnabled = ctx.isMqttEnabled();
 
-	Serial.printf(" MQTT Server: %s:%d, Client: %s\r\n", ctx.mqttServer, ctx.mqttPort, ctx.mqttClientName);
-	Serial.printf(" MQTT UpdateStatusTopic: %s\r\n", ctx.mqttUpdateStatusTopic);
-	Serial.printf(" MQTT CommandTopic: %s\r\n", ctx.mqttCommandTopic);
-	Serial.printf(" sleep time: %ld\r\n", ctx.sleepTime);
-	Serial.printf(" firmware base URL: %s\r\n", ctx.firmwareUrl);
+	Serial.println(" Using configuration:");
+	Serial.printf("  MQTT Server: %s:%d, Client: %s\r\n", ctx.mqttServer, ctx.mqttPort, ctx.mqttClientName);
+	Serial.printf("  MQTT UpdateStatusTopic: %s\r\n", ctx.mqttUpdateStatusTopic);
+	Serial.printf("  MQTT CommandTopic: %s\r\n", ctx.mqttCommandTopic);
+	Serial.printf("  sleep time: %ld\r\n", ctx.sleepTime);
+	Serial.printf("  firmware base URL: %s\r\n", ctx.firmwareUrl);
 	saveConfig();
 
 	getUpdate();
@@ -74,7 +78,7 @@ void setup() {
 void getConfig() {
 	if (SPIFFS.begin()) {
 		if (SPIFFS.exists(CONFIG_FILE)) {
-			Serial.println("Reading config file");
+			Serial.println(" Reading config file");
 			File configFile = SPIFFS.open(CONFIG_FILE, "r");
 			if (configFile) {
 				DynamicJsonDocument jsonDocument(512);
@@ -87,15 +91,18 @@ void getConfig() {
 					strlcpy(ctx.mqttCommandTopic, jsonDocument["mqttCommandTopic"] | "", sizeof ctx.mqttCommandTopic);
 					ctx.sleepTime = jsonDocument["sleepTime"] | 0;
 					strlcpy(ctx.firmwareUrl, jsonDocument["firmwareUrl"] | "", sizeof ctx.firmwareUrl);
+					Serial.println(" Config file read.");
 
 				} else {
-					Serial.println(" failed to load json config");
+					Serial.println("  Failed to load json config.");
 				}
 				configFile.close();
 			}
+		} else {
+			Serial.println("  No config file found (initial start?).");
 		}
 	} else {
-		Serial.println("Failed to mount FS");
+		Serial.println("  Failed to mount FS");
 	}
 }
 
@@ -113,16 +120,18 @@ void initMqttClientName() {
 
 // -----------------------------------------------------------------------------------------------------
 void setupWifi() {
+	Serial.println(" Connecting to WiFi...");
+
 	WiFiManager wifiManager;
 	requestMqttParameters(&wifiManager);
 	initAccessPointName();
 	if (!wifiManager.autoConnect(accessPointName)) {
-		Serial.println("failed to connect, resetting");
+		Serial.println("  Failed to connect, resetting.");
 		WiFi.disconnect();
 		delay(1000);
 		ESP.restart();
 	}
-	Serial.println("Connected.");
+	Serial.println(" Connected to WiFi.");
 }
 
 // -----------------------------------------------------------------------------------------------------
@@ -139,7 +148,7 @@ void requestMqttParameters(WiFiManager *wifiManager) {
 // -----------------------------------------------------------------------------------------------------
 void saveConfig() {
 	if (shouldSaveConfig) {
-		Serial.println("Saving config...");
+		Serial.println(" Saving config...");
 		if (!SPIFFS.begin(false)) {
 			if (!SPIFFS.begin(true)) {
 				Serial.println(" an Error has occurred while mounting SPIFFS");
@@ -149,7 +158,7 @@ void saveConfig() {
 		}
 		File configFile = SPIFFS.open(CONFIG_FILE, FILE_WRITE);
 		if (!configFile) {
-			Serial.println(" failed to open config file for writing");
+			Serial.println("  Failed to open config file for writing.");
 			delay(30000);
 			ESP.restart();
 		}
@@ -162,12 +171,12 @@ void saveConfig() {
 		jsonDocument["sleepTime"] = ctx.sleepTime;
 		jsonDocument["firmwareUrl"] = ctx.firmwareUrl;
 		if (serializeJson(jsonDocument, configFile) == 0) {
-			Serial.println(" failed to write to file");
+			Serial.println("  Failed to write to file.");
 			delay(30000);
 			ESP.restart();
 		}
 		configFile.close();
-		Serial.println("Config saved");
+		Serial.println(" Config saved.");
 	}
 }
 
@@ -208,41 +217,41 @@ void getUpdate() {
 	String firmwareVersionUrl = firmwareUrl;
 	firmwareVersionUrl.concat(".version");
 
-	Serial.printf("Checking for firmware update, version file '%s'.\r\n", firmwareVersionUrl.c_str());
+	Serial.printf(" Checking for firmware update, version file '%s'...\r\n", firmwareVersionUrl.c_str());
 	HTTPClient httpClient;
 	httpClient.begin(firmwareVersionUrl);
 	int httpCode = httpClient.GET();
 	if (httpCode == 200) {
 		String newFWVersion = httpClient.getString();
-		Serial.printf(" current firmware version: %d, available version: %s", FW_VERSION, newFWVersion.c_str());
+		Serial.printf("  Current firmware version: %d, available version: %s", FW_VERSION, newFWVersion.c_str());
 		int newVersion = newFWVersion.toInt();
 		if (newVersion > FW_VERSION) {
-			Serial.println(" updating...");
+			Serial.println(" Updating...");
 			String firmwareImageUrl = firmwareUrl;
 			firmwareImageUrl.concat(".bin");
 			t_httpUpdate_return ret = httpUpdate.update(espClient, firmwareImageUrl);
 
 			switch (ret) {
 				case HTTP_UPDATE_FAILED:
-					Serial.printf(" update failed: (%d): %s\r\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+					Serial.printf("  Update failed: (%d): %s\r\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
 					break;
 
 				case HTTP_UPDATE_NO_UPDATES:
-					Serial.printf(" update file '%s' found\r\n", firmwareImageUrl.c_str());
+					Serial.printf("  Update file '%s' found\r\n", firmwareImageUrl.c_str());
 					break;
 			}
 		} else if (newVersion == -1) {
 			factoryReset();
 
 		} else {
-			Serial.println(" we are up to date");
+			Serial.println("  We are up to date.");
 		}
 
 	} else if (httpCode == 404) {
-		Serial.println(" no firmware version file found");
+		Serial.println("  No firmware version file found.");
 
 	} else {
-		Serial.printf(" firmware version check failed, got HTTP response code %d\r\n", httpCode);
+		Serial.printf("  Firmware version check failed, got HTTP response code %d.\r\n", httpCode);
 	}
 	httpClient.end();
 }
@@ -301,14 +310,14 @@ void reconnect() {
 void loop() {
 	if (!isDisplayUpdateRunning && isMqttEnabled && !mqttClient.connected()) {
 		reconnect();
-		Serial.println(" reconnected, waiting for incoming MQTT message");
+		Serial.println(" Reconnected, waiting for incoming MQTT messages...");
 		// get max 100 messages
 		for (int i = 0; i < 100; ++i) {
 			mqttClient.loop();
 			delay(10);
 		}
 		if (!isUpdateAvailable) {
-			Serial.println(" no update available");
+			Serial.println(" No update available.");
 		}
 	}
 
@@ -334,7 +343,7 @@ void loop() {
 				delay(100);
 				disconnect();
 			}
-			Serial.printf("Webserver started, waiting %sfor updates\r\n", isMqttEnabled ? "" : "10s ");
+			Serial.printf("Webserver started, waiting %sfor data\r\n", isMqttEnabled ? "" : "10s ");
 
 		} else {
 			Srvr__loop();
@@ -363,7 +372,7 @@ void loop() {
 		if (isTimeToSleep) {
 			if (ctx.sleepTime > 0) {
 				disconnect();
-				Serial.printf("Going to sleep for %ld seconds.\r\n", ctx.sleepTime);
+				Serial.printf("\r\nGoing to sleep for %ld seconds.\r\n", ctx.sleepTime);
 				ESP.deepSleep(ctx.sleepTime * 1000000);
 				delay(100);
 
