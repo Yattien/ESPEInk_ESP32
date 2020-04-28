@@ -24,7 +24,7 @@
 #include "srvr.h" // Server functions
 
 // -----------------------------------------------------------------------------------------------------
-const int FW_VERSION = 4; // for OTA
+const int FW_VERSION = 5; // for OTA
 // -----------------------------------------------------------------------------------------------------
 const char *CONFIG_FILE = "/config.json";
 const float TICKS_PER_SECOND = 80000000; // 80 MHz processor
@@ -35,7 +35,6 @@ WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
 char accessPointName[24];
-bool shouldSaveConfig = false;
 bool isMqttEnabled = false;
 
 Ctx ctx;
@@ -43,7 +42,7 @@ Ctx ctx;
 // -----------------------------------------------------------------------------------------------------
 void setup() {
 	Serial.begin(115200);
-	Serial.println("\r\nESPEInk_ESP32 v" + String(FW_VERSION) + ", reset reason='" + (int)rtc_get_reset_reason(0) + "'...");
+	Serial.println("\r\nESPEInk_ESP32 v" + String(FW_VERSION) + ", reset reason=" + (int) rtc_get_reset_reason(0) + "...");
 	Serial.println("Entering setup...");
 
 	pinMode(LED_BUILTIN, OUTPUT);
@@ -62,7 +61,6 @@ void setup() {
 	Serial.printf("  MQTT CommandTopic: %s\r\n", ctx.mqttCommandTopic);
 	Serial.printf("  sleep time: %ld\r\n", ctx.sleepTime);
 	Serial.printf("  firmware base URL: %s\r\n", ctx.firmwareUrl);
-	saveConfig();
 
 	getUpdate();
 
@@ -123,6 +121,7 @@ void setupWifi() {
 	Serial.println(" Connecting to WiFi...");
 
 	WiFiManager wifiManager;
+	wifiManager.setDebugOutput(false);
 	requestMqttParameters(&wifiManager);
 	initAccessPointName();
 	if (!wifiManager.autoConnect(accessPointName)) {
@@ -146,43 +145,36 @@ void requestMqttParameters(WiFiManager *wifiManager) {
 }
 
 // -----------------------------------------------------------------------------------------------------
-void saveConfig() {
-	if (shouldSaveConfig) {
-		Serial.println(" Saving config...");
-		if (!SPIFFS.begin(false)) {
-			if (!SPIFFS.begin(true)) {
-				Serial.println(" an Error has occurred while mounting SPIFFS");
-				delay(30000);
-				ESP.restart();
-			}
-		}
-		File configFile = SPIFFS.open(CONFIG_FILE, FILE_WRITE);
-		if (!configFile) {
-			Serial.println("  Failed to open config file for writing.");
-			delay(30000);
-			ESP.restart();
-		}
-		DynamicJsonDocument jsonDocument(512);
-		jsonDocument["mqttServer"] = ctx.mqttServer;
-		jsonDocument["mqttPort"] = ctx.mqttPort;
-		jsonDocument["mqttClientName"] = ctx.mqttClientName;
-		jsonDocument["mqttUpdateStatusTopic"] = ctx.mqttUpdateStatusTopic;
-		jsonDocument["mqttCommandTopic"] = ctx.mqttCommandTopic;
-		jsonDocument["sleepTime"] = ctx.sleepTime;
-		jsonDocument["firmwareUrl"] = ctx.firmwareUrl;
-		if (serializeJson(jsonDocument, configFile) == 0) {
-			Serial.println("  Failed to write to file.");
-			delay(30000);
-			ESP.restart();
-		}
-		configFile.close();
-		Serial.println(" Config saved.");
-	}
-}
-
-// -----------------------------------------------------------------------------------------------------
 void saveConfigCallback() {
-	shouldSaveConfig = true;
+	Serial.println(" Saving config...");
+	if (!SPIFFS.begin(false)) {
+		if (!SPIFFS.begin(true)) {
+			Serial.println(" an Error has occurred while mounting SPIFFS");
+			delay(30000);
+			ESP.restart();
+		}
+	}
+	File configFile = SPIFFS.open(CONFIG_FILE, FILE_WRITE);
+	if (!configFile) {
+		Serial.println("  Failed to open config file for writing.");
+		delay(30000);
+		ESP.restart();
+	}
+	DynamicJsonDocument jsonDocument(512);
+	jsonDocument["mqttServer"] = ctx.mqttServer;
+	jsonDocument["mqttPort"] = ctx.mqttPort;
+	jsonDocument["mqttClientName"] = ctx.mqttClientName;
+	jsonDocument["mqttUpdateStatusTopic"] = ctx.mqttUpdateStatusTopic;
+	jsonDocument["mqttCommandTopic"] = ctx.mqttCommandTopic;
+	jsonDocument["sleepTime"] = ctx.sleepTime;
+	jsonDocument["firmwareUrl"] = ctx.firmwareUrl;
+	if (serializeJson(jsonDocument, configFile) == 0) {
+		Serial.println("  Failed to write to file.");
+		delay(30000);
+		ESP.restart();
+	}
+	configFile.close();
+	Serial.println(" Config saved.");
 }
 
 // -----------------------------------------------------------------------------------------------------
@@ -341,7 +333,6 @@ void loop() {
 			if (isUpdateAvailable) {
 				mqttClient.publish(ctx.mqttCommandTopic, "true");
 				delay(100);
-				disconnect();
 			}
 			Serial.printf("Webserver started, waiting %sfor data\r\n", isMqttEnabled ? "" : "10s ");
 
