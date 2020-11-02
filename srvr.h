@@ -175,7 +175,8 @@ bool Srvr__loop()
                 Serial.print("\r\nEPD\r\n");
                 // Getting of e-Paper's type
                 EPD_dispIndex = (int)Buff__bufArr[Buff__bufInd - 1] - (int)'a';
-
+                if(EPD_dispIndex < 0)
+                  EPD_dispIndex = (int)Buff__bufArr[Buff__bufInd - 1] - (int)'A' + 26;
                 // Print log message: initialization of e-Paper (e-Paper's type)
                 Serial.printf("EPD %s", EPD_dispMass[EPD_dispIndex].title);
 

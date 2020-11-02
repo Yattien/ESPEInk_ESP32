@@ -142,6 +142,37 @@ int EPD_Init_2in13b()
     return 0;
 }
 
+int EPD_2IN13B_V3_Init(void)
+{
+    EPD_Reset();
+    delay(10);
+    
+    EPD_SendCommand(0x04);  
+    EPD_WaitUntilIdle();//waiting for the electronic paper IC to release the idle signal
+
+    EPD_Send_2(0x00, 0x0f, 0x89);//panel setting
+
+    EPD_Send_3(0x61, 0x68, 0x00, 0xd4);//resolution setting
+
+    EPD_Send_1(0X50, 0x77);//VCOM AND DATA INTERVAL SETTING
+
+    EPD_SendCommand(0x10);             // DATA_START_TRANSMISSION_1
+    delay(2);
+    return 0;
+}
+
+void EPD_2IN13B_V3_Show()
+{
+    EPD_SendCommand(0x12);		 //DISPLAY REFRESH
+    delay(2);
+    EPD_WaitUntilIdle();
+	
+	EPD_Send_1(0X50, 0xf7);
+    EPD_SendCommand(0X02); //power off
+    EPD_WaitUntilIdle();          //waiting for the electronic paper IC to release the idle signal
+    EPD_Send_1(0X07, 0xa5); //deep sleep
+}
+
 int EPD_Init_2in13d()
 {
     EPD_Reset();

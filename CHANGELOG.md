@@ -2,6 +2,7 @@
 
 ## Version v5
 
+- Updated waveshare code
 - Fixed typo
 - Changed compatibility to "ESP32 Dev Module" used by waveshare
 - Changed debug logging

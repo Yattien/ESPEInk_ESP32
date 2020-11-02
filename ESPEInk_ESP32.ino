@@ -100,7 +100,7 @@ void getConfig() {
 			Serial.println("  No config file found (initial start?).");
 		}
 	} else {
-		Serial.println("  Failed to mount FS");
+		Serial.println("  Failed to mount FS (probably initial start), continuing w/o config...");
 	}
 }
 

@@ -48,3 +48,20 @@ int EPD_5in83b__init()
     delay(2);
     return 0;
 }
+
+int EPD_5in83b_V2_init() 
+{
+    EPD_Reset();
+	EPD_Send_4(0x01, 0x07, 0x07, 0x3f, 0x3f);			//POWER SETTING
+	EPD_SendCommand(0x04); //POWER ON
+	delay(100);  
+	EPD_WaitUntilIdle();        //waiting for the electronic paper IC to release the idle signal
+	EPD_Send_1(0X00, 0x0F);			//PANNEL SETTING
+	EPD_Send_4(0x61, 0x02, 0x88, 0x01, 0xe0);        	//tres			
+	EPD_Send_1(0X15, 0x00);		
+	EPD_Send_2(0X50, 0x11, 0x07);			//VCOM AND DATA INTERVAL SETTING
+	EPD_Send_1(0X60, 0x22);			//TCON SETTING
+	EPD_SendCommand(0x10);                   // DATA_START_TRANSMISSION_1  
+	delay(2);
+    return 0;
+}

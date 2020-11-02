@@ -102,6 +102,49 @@ int EPD_Init_1in54b()
     return 0;
 }
 
+int EPD_1IN54B_V2_Init(void)
+{
+    EPD_Reset();
+    EPD_WaitUntilIdle_high();  
+	
+    EPD_SendCommand(0x12);  //SWRESET
+    EPD_WaitUntilIdle_high();   
+
+    EPD_Send_3(0x01, 0xc7, 0x00, 0x01); //Driver output control      
+
+    EPD_Send_1(0x11, 0x01); //data entry mode       
+
+    EPD_Send_2(0x44, 0x00, 0x18); //set Ram-X address start/end position   
+
+    EPD_Send_4(0x45, 0xc7, 0x00, 0x00, 0x00); //set Ram-Y address start/end position          
+
+    EPD_Send_1(0x3C, 0x05); //BorderWavefrom
+
+    EPD_Send_1(0x18, 0x80); //Read built-in temperature sensor
+
+    EPD_Send_1(0x4E, 0x00);   // set RAM x address count to 0;
+	
+    EPD_Send_2(0x4F, 0xc7, 0x00);   // set RAM y address count to 0X199;    
+
+    EPD_WaitUntilIdle_high();
+	
+	EPD_SendCommand(0x24);
+    delay(2);
+	return 0;
+}
+
+void EPD_1IN54B_V2_Show(void)
+{
+	//refresh
+    EPD_Send_1(0x22, 0xf7); //Display Update Control
+    EPD_SendCommand(0x20);  //Activate Display Update Sequence
+    EPD_WaitUntilIdle_high();
+	
+	//sleep
+    EPD_Send_1(0x10, 0x01); //enter deep sleep
+    delay(2);
+}
+
 int EPD_Init_1in54c()
 {
     EPD_Reset();

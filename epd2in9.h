@@ -50,6 +50,22 @@ int EPD_Init_2in9b()
     return 0;
 }
 
+
+int EPD_Init_2in9b_V2() 
+{
+    EPD_Reset();
+    EPD_SendCommand(0x04);//POWER_ON
+    EPD_WaitUntilIdle();
+    
+    EPD_Send_2(0x00, 0x0F, 0x89);//PANEL_SETTING
+    EPD_Send_3(0x61, 0x80, 0x01, 0x28);//TCON_RESOLUTION
+    EPD_Send_1(0x50, 0x77);//VCOM_AND_DATA_INTERVAL_SETTING;
+
+    EPD_SendCommand(0x10);//DATA_START_TRANSMISSION_1  
+    delay(2);
+    return 0;
+}
+
 /************************************************************************************/
 #define UBYTE   uint8_t
 #define UWORD   uint16_t
@@ -232,4 +248,3 @@ int EPD_Init_2in9d()
 
     return 0;
 }
-

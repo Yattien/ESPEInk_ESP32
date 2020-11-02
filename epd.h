@@ -24,6 +24,8 @@
   ******************************************************************************
   */
 /* SPI pin definition --------------------------------------------------------*/
+//#include "epd7in5_HD.h"
+
 #define PIN_SPI_SCK  13
 #define PIN_SPI_DIN  14
 #define PIN_SPI_CS   15
@@ -120,6 +122,13 @@ void EPD_WaitUntilIdle()
     while(digitalRead(PIN_SPI_BUSY) == 0) delay(100);    
 }
 
+/* Waiting the e-Paper is ready for further instructions ---------------------*/
+void EPD_WaitUntilIdle_high() 
+{
+    //1: busy, 0: idle
+    while(digitalRead(PIN_SPI_BUSY) == 1) delay(100);    
+}
+
 /* Send a one-argument command -----------------------------------------------*/
 void EPD_Send_1(byte c, byte v1)
 {
@@ -208,10 +217,13 @@ void EPD_Reset()
 #include "epd2in13.h"
 #include "epd2in9.h"
 #include "epd2in7.h"
+#include "epd2in66.h"
+#include "epd3in7.h"
 #include "epd4in2.h"
+#include "epd5in65f.h"
 #include "epd5in83.h"
 #include "epd7in5.h"
-
+#include "epd7in5_HD.h"
 bool EPD_invert;           // If true, then image data bits must be inverted
 int  EPD_dispIndex;        // The index of the e-Paper's type
 int  EPD_dispX, EPD_dispY; // Current pixel's coordinates (for 2.13 only)
@@ -231,7 +243,9 @@ void EPD_loadA()
     {
         // Get current byte
         int value = Buff__getByte(pos);
-
+//		Serial.printf("address:%d, data:%x ",pos, value);
+//		if(pos % 8 == 0)
+//			Serial.printf("\r\n");
         // Invert byte's bits in case of '2.7' e-Paper
         if (EPD_invert) value = ~value;
 
@@ -256,7 +270,7 @@ void EPD_loadAFilp()
     {
         // Get current byte
         int value = Buff__getByte(pos);
-
+		
         // Invert byte's bits in case of '2.7' e-Paper
         if (EPD_invert) value = ~value;
 
@@ -423,18 +437,46 @@ void EPD_loadF()
     {
         // Get current byte from obtained image data
         int value = Buff__getByte(pos);  
-
+		int value1 = Buff__getByte(pos+2);  
         // Processing of 4 1-bit pixels to 4 4-bit pixels:
         // white(value 1) to bits 0011, red(value 2) to bits 0100
         int A = (value     ) & 3;if (A == 2) A = 4;
-        int B = (value >> 2) & 3;if (B == 2) B = 4;
-        int C = (value >> 4) & 3;if (C == 2) C = 4;
-        int D = (value >> 6) & 3;if (D == 2) D = 4;
+        int B = (value >> 8) & 3;if (B == 2) B = 4;
+        int C = (value1 >> 4) & 3;if (C == 2) C = 4;
+        int D = (value1 >> 6) & 3;if (D == 2) D = 4;
 
         // Write the word into e-Paper's memory
         EPD_SendData((A << 4) + B);
         EPD_SendData((C << 4) + D);
 
+        // Increment the current byte index on 2 characters
+        pos += 4;
+    }
+}
+
+/* Image data loading function for 5.65f e-Paper -----------------------------*/
+void EPD_loadG()
+{
+    // Come back to the image data end
+    Buff__bufInd -= 8;
+
+    // Get the index of the image data begin
+    int pos = Buff__bufInd - Buff__getWord(Buff__bufInd);
+
+    // Enumerate all of image data bytes
+    while (pos < Buff__bufInd)
+    {
+        // Get current byte from obtained image data
+        int value = Buff__getByte(pos);  
+		
+        // Switch the positions of the two 4-bits pixels
+        // Black:0b000;White:0b001;Green:0b010;Blue:0b011;Red:0b100;Yellow:0b101;Orange:0b110;
+        int A = (value     ) & 0x07;
+        int B = (value >> 4) & 0x07;
+		
+        // Write the data into e-Paper's memory
+        EPD_SendData((byte)(A << 4) + B);
+		
         // Increment the current byte index on 2 characters
         pos += 2;
     }
@@ -530,30 +572,39 @@ struct EPD_dispInfo
 /* Array of sets describing the usage of e-Papers ----------------------------*/
 EPD_dispInfo EPD_dispMass[] =
 {
-    { EPD_Init_1in54 , EPD_loadA, -1  , 0,         EPD_showA, "1.54 inch"   },// a 0
-    { EPD_Init_1in54b, EPD_loadB, 0x13, EPD_loadA, EPD_showB, "1.54 inch b" },// b 1
-    { EPD_Init_1in54c, EPD_loadA, 0x13, EPD_loadA, EPD_showB, "1.54 inch c" },// c 2
-    { EPD_Init_2in13 , EPD_loadC, -1  , 0,         EPD_showA, "2.13 inch"   },// d 3
-    { EPD_Init_2in13b, EPD_loadA, 0x13, EPD_loadA, EPD_showB, "2.13 inch b" },// e 4
-    { EPD_Init_2in13b, EPD_loadA, 0x13, EPD_loadA, EPD_showB, "2.13 inch c" },// f 5
-    { EPD_Init_2in13d, EPD_loadA, -1  , 0,         EPD_showD, "2.13 inch d" },// g 6
-    { EPD_Init_2in7  , EPD_loadA, -1  , 0,         EPD_showB, "2.7 inch"    },// h 7
-    { EPD_Init_2in7b , EPD_loadA, 0x13, EPD_loadA, EPD_showB, "2.7 inch b"  },// i 8
-    { EPD_Init_2in9  , EPD_loadA, -1  , 0,         EPD_showA, "2.9 inch"    },// j 9
-    { EPD_Init_2in9b , EPD_loadA, 0x13, EPD_loadA, EPD_showB, "2.9 inch b"  },// k 10
-    { EPD_Init_2in9b , EPD_loadA, 0x13, EPD_loadA, EPD_showB, "2.9 inch c"  },// l 11
-    { EPD_Init_2in9d , EPD_loadA, -1  , 0,         EPD_2IN9D_Show, "2.9 inch d" },// M 12
-    { EPD_Init_4in2  , EPD_loadA, -1  , 0,         EPD_showB, "4.2 inch"    },// N 13
-    { EPD_Init_4in2b , EPD_loadA, 0x13, EPD_loadA, EPD_showB, "4.2 inch b"  },// O 14
-    { EPD_Init_4in2b , EPD_loadA, 0x13, EPD_loadA, EPD_showB, "4.2 inch c"  },// P 15
-    { EPD_5in83__init, EPD_loadD, -1  , 0,         EPD_showC, "5.83 inch"   },// Q 16
-    { EPD_5in83b__init,EPD_loadE, -1  , 0,         EPD_showC, "5.83 inch b" },// R 17
-    { EPD_5in83b__init,EPD_loadE, -1  , 0,         EPD_showC, "5.83 inch c" },// S 18
-    { EPD_7in5__init , EPD_loadD, -1  , 0,         EPD_showC, "7.5 inch"    },// T 19    
-    { EPD_7in5__init , EPD_loadE, -1  , 0,         EPD_showC, "7.5 inch b"  },// u 20
-    { EPD_7in5__init , EPD_loadE, -1  , 0,         EPD_showC, "7.5 inch c"  },// v 21
-    { EPD_7in5_V2_init , EPD_loadAFilp, -1  , 0,   EPD_7IN5_V2_Show, "7.5 inch V2" },// w 22
-    { EPD_7in5B_V2_Init , EPD_loadA, 0x13  , EPD_loadAFilp,      EPD_7IN5_V2_Show, "7.5 inch B V2 "}// x 23    
+    { EPD_Init_1in54,		EPD_loadA,		-1  ,	0,				EPD_showA,			"1.54 inch"		},// a 0
+    { EPD_Init_1in54b,		EPD_loadB,		0x13,	EPD_loadA,		EPD_showB,			"1.54 inch b"	},// b 1
+    { EPD_Init_1in54c,		EPD_loadA,		0x13,	EPD_loadA,		EPD_showB,			"1.54 inch c"	},// c 2
+    { EPD_Init_2in13,		EPD_loadC,		-1  ,	0,				EPD_showA,			"2.13 inch"		},// d 3
+    { EPD_Init_2in13b,		EPD_loadA,		0x13,	EPD_loadA,		EPD_showB,			"2.13 inch b"	},// e 4
+    { EPD_Init_2in13b,		EPD_loadA,		0x13,	EPD_loadA,		EPD_showB,			"2.13 inch c"	},// f 5
+    { EPD_Init_2in13d,		EPD_loadA,		-1  ,	0,				EPD_showD,			"2.13 inch d"	},// g 6
+    { EPD_Init_2in7,		EPD_loadA, 		1  ,	0,				EPD_showB,			"2.7 inch"		},// h 7
+    { EPD_Init_2in7b,		EPD_loadA,		0x13,	EPD_loadA,		EPD_showB,			"2.7 inch b"	},// i 8
+    { EPD_Init_2in9,		EPD_loadA,		-1  ,	0,				EPD_showA,			"2.9 inch"		},// j 9
+    { EPD_Init_2in9b,		EPD_loadA,		0x13,	EPD_loadA,		EPD_showB,			"2.9 inch b"	},// k 10
+    { EPD_Init_2in9b,		EPD_loadA,		0x13,	EPD_loadA,		EPD_showB,			"2.9 inch c"	},// l 11
+    { EPD_Init_2in9d,		EPD_loadA,		-1  ,	0,				EPD_2IN9D_Show,		"2.9 inch d"	},// M 12
+    { EPD_Init_4in2,		EPD_loadA,		-1  ,	0,				EPD_showB,			"4.2 inch"		},// N 13
+    { EPD_Init_4in2b,		EPD_loadA,		0x13,	EPD_loadA,		EPD_showB,			"4.2 inch b"	},// O 14
+    { EPD_Init_4in2b,		EPD_loadA,		0x13,	EPD_loadA,		EPD_showB,			"4.2 inch c"	},// P 15
+    { EPD_5in83__init,		EPD_loadD,		-1  ,	0,				EPD_showC,			"5.83 inch"		},// Q 16
+    { EPD_5in83b__init,		EPD_loadE,		-1  ,	0,				EPD_showC,			"5.83 inch b"	},// R 17
+    { EPD_5in83b__init,		EPD_loadE,		-1  ,	0,				EPD_showC,			"5.83 inch c"	},// S 18
+    { EPD_7in5__init,		EPD_loadD,		-1  ,	0,				EPD_showC,			"7.5 inch"		},// T 19    
+    { EPD_7in5__init,		EPD_loadE,		-1  ,	0,				EPD_showC,			"7.5 inch b"	},// u 20
+    { EPD_7in5__init,		EPD_loadE,		-1  ,	0,				EPD_showC,			"7.5 inch c"	},// v 21
+    { EPD_7in5_V2_init,		EPD_loadAFilp,	-1  ,	0,				EPD_7IN5_V2_Show,	"7.5 inch V2"	},// w 22
+    { EPD_7in5B_V2_Init,	EPD_loadA,		0x13,	EPD_loadAFilp,	EPD_7IN5_V2_Show,	"7.5 inch B V2"	},// x 23
+    { EPD_7IN5B_HD_init,	EPD_loadA,		0x26,	EPD_loadAFilp,	EPD_7IN5B_HD_Show,	"7.5 inch B HD"	},// y 24
+	{ EPD_5IN65F_init,		EPD_loadG,		-1  ,	0,				EPD_5IN65F_Show,	"5.65 inch F "	},// z 25
+	{ EPD_7IN5_HD_init,		EPD_loadA,		-1	,	0,				EPD_7IN5_HD_Show,	"7.5 inch HD"	},// A 26
+	{ EPD_3IN7_1Gray_Init,	EPD_loadA,		-1	,	0,				EPD_3IN7_1Gray_Show,"3.7 inch"		},// 27
+	{ EPD_2IN66_Init,		EPD_loadA,		-1	,	0,				EPD_2IN66_Show,		"2.66 inch"		},// 28
+	{ EPD_5in83b_V2_init,	EPD_loadA,		0x13,	EPD_loadAFilp,	EPD_showC,			"5.83 inch B V2"},// 29
+	{ EPD_Init_2in9b_V2,	EPD_loadA,		0x13,	EPD_loadA,		EPD_showC,			"2.9 inch B V2"	},// 30
+	{ EPD_1IN54B_V2_Init,	EPD_loadA,		0x26,	EPD_loadAFilp,	EPD_1IN54B_V2_Show,	"1.54 inch B V2"},// 31
+	{ EPD_2IN13B_V3_Init,	EPD_loadA,		0x13,	EPD_loadA,		EPD_2IN13B_V3_Show,	"2.13 inch B V3"},// 32
 };
 
 /* Initialization of an e-Paper ----------------------------------------------*/
