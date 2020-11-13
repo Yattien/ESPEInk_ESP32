@@ -31,7 +31,7 @@ const float TICKS_PER_SECOND = 80000000; // 80 MHz processor
 const int UPTIME_SEC = 10;
 int LED_BUILTIN = 2; // neeed to be defined for board "ESP32 Dev Module" - comment it for "ESP32 Devkit v1"
 
-WiFiClient espClient;
+WiFiClientSecure espClient;
 PubSubClient mqttClient(espClient);
 
 char accessPointName[24];
@@ -87,6 +87,9 @@ void getConfig() {
 				if (!error) {
 					strlcpy(ctx.mqttServer, jsonDocument["mqttServer"] | "", sizeof ctx.mqttServer);
 					ctx.mqttPort = jsonDocument["mqttPort"] | 1883;
+					strlcpy(ctx.mqttUser, jsonDocument["mqttUser"] | "", sizeof ctx.mqttUser);
+					strlcpy(ctx.mqttPassword, jsonDocument["mqttPassword"] | "", sizeof ctx.mqttPassword);
+					strlcpy(ctx.mqttFingerprint, jsonDocument["mqttFingerprint"] | "", sizeof ctx.mqttFingerprint);
 					strlcpy(ctx.mqttClientName, jsonDocument["mqttClientName"] | "", sizeof ctx.mqttClientName);
 					strlcpy(ctx.mqttUpdateStatusTopic, jsonDocument["mqttUpdateStatusTopic"] | "", sizeof ctx.mqttUpdateStatusTopic);
 					strlcpy(ctx.mqttCommandTopic, jsonDocument["mqttCommandTopic"] | "", sizeof ctx.mqttCommandTopic);
@@ -140,6 +143,9 @@ void setupWifi() {
 void requestMqttParameters(WiFiManager *wifiManager) {
 	wifiManager->addParameter(ctx.customMqttServer);
 	wifiManager->addParameter(ctx.customMqttPort);
+	wifiManager->addParameter(ctx.customMqttUser);
+	wifiManager->addParameter(ctx.customMqttPassword);
+	wifiManager->addParameter(ctx.customMqttFingerprint);
 	wifiManager->addParameter(ctx.customMqttUpdateStatusTopic);
 	wifiManager->addParameter(ctx.customMqttCommandTopic);
 	wifiManager->addParameter(ctx.customSleepTime);
@@ -166,6 +172,9 @@ void saveConfigCallback() {
 	DynamicJsonDocument jsonDocument(512);
 	jsonDocument["mqttServer"] = ctx.mqttServer;
 	jsonDocument["mqttPort"] = ctx.mqttPort;
+	jsonDocument["mqttUser"] = ctx.mqttUser;
+	jsonDocument["mqttPassword"] = ctx.mqttPassword;
+	jsonDocument["mqttFingerprint"] = ctx.mqttFingerprint;
 	jsonDocument["mqttClientName"] = ctx.mqttClientName;
 	jsonDocument["mqttUpdateStatusTopic"] = ctx.mqttUpdateStatusTopic;
 	jsonDocument["mqttCommandTopic"] = ctx.mqttCommandTopic;
@@ -234,6 +243,10 @@ void getUpdate() {
 				case HTTP_UPDATE_NO_UPDATES:
 					Serial.printf("  Update file '%s' found\r\n", firmwareImageUrl.c_str());
 					break;
+					
+				case HTTP_UPDATE_OK:
+					Serial.printf("  Updated\r\n");
+					break;
 			}
 		} else if (newVersion == -1) {
 			factoryReset();
@@ -287,8 +300,9 @@ void disconnect() {
 void reconnect() {
 	Serial.println("Connecting to MQTT...");
 	while (!mqttClient.connected()) {
+		verifyFingerprint();
 		// clientID, username, password, willTopic, willQoS, willRetain, willMessage, cleanSession
-		if (!mqttClient.connect(ctx.mqttClientName, NULL, NULL, NULL, 0, 0, NULL, 0)) {
+		if (!mqttClient.connect(ctx.mqttClientName, ctx.mqttUser, ctx.mqttPassword, NULL, 0, 0, NULL, 0)) {
 			delay(1000);
 		} else {
 			boolean rc = mqttClient.subscribe(ctx.mqttUpdateStatusTopic, 1);
@@ -297,6 +311,20 @@ void reconnect() {
 			} else {
 				Serial.printf(" subscription to %s failed: %d\n", ctx.mqttUpdateStatusTopic, rc);
 			}
+		}
+	}
+}
+
+// -----------------------------------------------------------------------------------------------------
+void verifyFingerprint() {
+	if (ctx.mqttFingerprint && strlen(ctx.mqttFingerprint) > 0) {
+		if(!espClient.verify(ctx.mqttFingerprint, ctx.mqttServer)) {
+			Serial.printf("MQTT fingerprint '%s' does not match, rebooting...\r\n", ctx.mqttFingerprint);
+			Serial.flush();
+			delay(200);
+			ESP.restart();
+		} else {
+			Serial.println("MQTT fingerprint does match");
 		}
 	}
 }
