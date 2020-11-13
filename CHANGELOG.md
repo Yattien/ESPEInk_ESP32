@@ -1,5 +1,9 @@
 # Changelog
 
+## Version v6
+
+- don't check if OTA update is available after deep-sleep
+
 ## Version v5
 
 - Updated waveshare code

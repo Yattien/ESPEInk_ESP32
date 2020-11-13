@@ -20,6 +20,7 @@ Das fertige Image kann per OTA (siehe auch OTA-Beispiel-Sketche) oder auch per [
   - Firmware-Basis-URL ist _optional_, wird keine angegeben, wird keine OTA-Update-Anfrage durchgeführt
   - die Einrichtungsdaten werden im ESP gespeichert und nicht mehr im Quellcode; sie sind damit auch nach einem Update noch verfügbar
 * **OTA-Firmware-Update**
+  - beim Start wird auf OTA-Updates geprüft - jedoch nicht, wenn der ESP nicht aus dem deep-sleep kommt
   - unterhalb der Firmware-Basis-URL werden zwei Dateien erwartet, Hauptnamensbestandteil ist die klein geschriebene (WiFi-)MAC-Adresse des ESP
   - `<MAC>.version` eine Datei, die nur eine Zahl, die Versionsnummer des zugehörigen Firmwareimages, enthält
   - ist die Versionsnummer in der Datei `-1`, wird ein Reset des ESP durchgeführt, um den Einrichtungsmanager erneut aufzurufen

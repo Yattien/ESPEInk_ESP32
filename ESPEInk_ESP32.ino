@@ -24,7 +24,7 @@
 #include "srvr.h" // Server functions
 
 // -----------------------------------------------------------------------------------------------------
-const int FW_VERSION = 5; // for OTA
+const int FW_VERSION = 6; // for OTA
 // -----------------------------------------------------------------------------------------------------
 const char *CONFIG_FILE = "/config.json";
 const float TICKS_PER_SECOND = 80000000; // 80 MHz processor
@@ -41,8 +41,9 @@ Ctx ctx;
 
 // -----------------------------------------------------------------------------------------------------
 void setup() {
+	int resetReason = (int) rtc_get_reset_reason(0);
 	Serial.begin(115200);
-	Serial.println("\r\nESPEInk_ESP32 v" + String(FW_VERSION) + ", reset reason=" + (int) rtc_get_reset_reason(0) + "...");
+	Serial.println("\r\nESPEInk_ESP32 v" + String(FW_VERSION) + ", reset reason=" + resetReason + "...");
 	Serial.println("Entering setup...");
 
 	pinMode(LED_BUILTIN, OUTPUT);
@@ -62,7 +63,9 @@ void setup() {
 	Serial.printf("  sleep time: %ld\r\n", ctx.sleepTime);
 	Serial.printf("  firmware base URL: %s\r\n", ctx.firmwareUrl);
 
-	getUpdate();
+	if (resetReason != 6) {
+		getUpdate();
+	}
 
 	EPD_initSPI();
 
