@@ -128,13 +128,15 @@ void setupWifi() {
 
 	WiFiManager wifiManager;
 	wifiManager.setDebugOutput(false);
+	wifiManager.setTimeout(300);
 	requestMqttParameters(&wifiManager);
 	initAccessPointName();
 	if (!wifiManager.autoConnect(accessPointName)) {
 		Serial.println("  Failed to connect, resetting.");
 		WiFi.disconnect();
-		delay(1000);
+		delay(3000);
 		ESP.restart();
+		delay(3000);
 	}
 	Serial.println(" Connected to WiFi.");
 }
