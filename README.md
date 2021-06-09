@@ -83,6 +83,11 @@ Im Zusammenspiel mit dem FHEM-Modul `ESPEInk` kann man das EInk-Display dazu bri
 	defmod mqtt_device MQTT <mqtt-server>:1883
 	```
 * ein DOIF als Trigger für die Konvertierung (derzeit ist die Konvertierung und der Upload noch gekoppelt), im Beispiel reagiere ich auf die Änderungen in einem dummy-Device `display_status`, welches bereits alle relevante Informationen enthält	
+    ```
+    defmod display_status DUMMY
+    attr display_status userReadings status_eg_wizi_fenster status_eg_bad_fenster ...
+    ```
+  Sobald sich ein Reading in dem Dummy ändert, wird die Konvertierung angestoßen. Somit ist immer ein aktuelles Bild vorhanden.
 	```
 	defmod display_status_doif DOIF ([display_status]) (\
 		set display convert\
