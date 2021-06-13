@@ -31,7 +31,8 @@ const float TICKS_PER_SECOND = 80000000; // 80 MHz processor
 const int UPTIME_SEC = 10;
 int LED_BUILTIN = 2; // neeed to be defined for board "ESP32 Dev Module" - comment it for "ESP32 Devkit v1"
 
-WiFiClientSecure espClient;
+//WiFiClientSecure espClient;
+WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
 char accessPointName[24];
@@ -225,7 +226,7 @@ void getUpdate() {
 
 	Serial.printf(" Checking for firmware update, version file '%s'...\r\n", firmwareVersionUrl.c_str());
 	HTTPClient httpClient;
-	httpClient.begin(firmwareVersionUrl);
+	httpClient.begin(espClient, firmwareVersionUrl);
 	int httpCode = httpClient.GET();
 	if (httpCode == 200) {
 		String newFWVersion = httpClient.getString();
@@ -302,7 +303,6 @@ void disconnect() {
 void reconnect() {
 	Serial.println("Connecting to MQTT...");
 	while (!mqttClient.connected()) {
-		verifyFingerprint();
 		// clientID, username, password, willTopic, willQoS, willRetain, willMessage, cleanSession
 		if (!mqttClient.connect(ctx.mqttClientName, ctx.mqttUser, ctx.mqttPassword, NULL, 0, 0, NULL, 0)) {
 			delay(1000);
@@ -313,20 +313,6 @@ void reconnect() {
 			} else {
 				Serial.printf(" subscription to %s failed: %d\n", ctx.mqttUpdateStatusTopic, rc);
 			}
-		}
-	}
-}
-
-// -----------------------------------------------------------------------------------------------------
-void verifyFingerprint() {
-	if (ctx.mqttFingerprint && strlen(ctx.mqttFingerprint) > 0) {
-		if(!espClient.verify(ctx.mqttFingerprint, ctx.mqttServer)) {
-			Serial.printf("MQTT fingerprint '%s' does not match, rebooting...\r\n", ctx.mqttFingerprint);
-			Serial.flush();
-			delay(200);
-			ESP.restart();
-		} else {
-			Serial.println("MQTT fingerprint does match");
 		}
 	}
 }
