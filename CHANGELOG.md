@@ -1,5 +1,8 @@
 # Changelog
 
+## Version v7
+- removed fingerprint parameter
+
 ## Version v6
 
 - login credentials support

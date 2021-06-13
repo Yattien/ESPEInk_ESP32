@@ -24,7 +24,7 @@
 #include "srvr.h" // Server functions
 
 // -----------------------------------------------------------------------------------------------------
-const int FW_VERSION = 6; // for OTA
+const int FW_VERSION = 7; // for OTA
 // -----------------------------------------------------------------------------------------------------
 const char *CONFIG_FILE = "/config.json";
 const float TICKS_PER_SECOND = 80000000; // 80 MHz processor
@@ -90,7 +90,6 @@ void getConfig() {
 					ctx.mqttPort = jsonDocument["mqttPort"] | 1883;
 					strlcpy(ctx.mqttUser, jsonDocument["mqttUser"] | "", sizeof ctx.mqttUser);
 					strlcpy(ctx.mqttPassword, jsonDocument["mqttPassword"] | "", sizeof ctx.mqttPassword);
-					strlcpy(ctx.mqttFingerprint, jsonDocument["mqttFingerprint"] | "", sizeof ctx.mqttFingerprint);
 					strlcpy(ctx.mqttClientName, jsonDocument["mqttClientName"] | "", sizeof ctx.mqttClientName);
 					strlcpy(ctx.mqttUpdateStatusTopic, jsonDocument["mqttUpdateStatusTopic"] | "", sizeof ctx.mqttUpdateStatusTopic);
 					strlcpy(ctx.mqttCommandTopic, jsonDocument["mqttCommandTopic"] | "", sizeof ctx.mqttCommandTopic);
@@ -148,7 +147,6 @@ void requestMqttParameters(WiFiManager *wifiManager) {
 	wifiManager->addParameter(ctx.customMqttPort);
 	wifiManager->addParameter(ctx.customMqttUser);
 	wifiManager->addParameter(ctx.customMqttPassword);
-	wifiManager->addParameter(ctx.customMqttFingerprint);
 	wifiManager->addParameter(ctx.customMqttUpdateStatusTopic);
 	wifiManager->addParameter(ctx.customMqttCommandTopic);
 	wifiManager->addParameter(ctx.customSleepTime);
@@ -177,7 +175,6 @@ void saveConfigCallback() {
 	jsonDocument["mqttPort"] = ctx.mqttPort;
 	jsonDocument["mqttUser"] = ctx.mqttUser;
 	jsonDocument["mqttPassword"] = ctx.mqttPassword;
-	jsonDocument["mqttFingerprint"] = ctx.mqttFingerprint;
 	jsonDocument["mqttClientName"] = ctx.mqttClientName;
 	jsonDocument["mqttUpdateStatusTopic"] = ctx.mqttUpdateStatusTopic;
 	jsonDocument["mqttCommandTopic"] = ctx.mqttCommandTopic;
