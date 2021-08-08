@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    edp5in83.h
   * @author  Waveshare Team
-  * @version V1.0.0
-  * @date    8-September-2018
+  * @version V1.1
+  * @date    15-Dec-2020
   * @brief   This file describes initialisation of 5.83, 5.83b, 5.83c e-Papers
   *
   ******************************************************************************
@@ -25,6 +25,31 @@ int EPD_5in83__init()
     EPD_Send_1(0x82, 0x1E);                  // VCM_DC_SETTING: decide by LUT file
     EPD_Send_1(0xE5, 0x03);                  // FLASH MODE  
     EPD_SendCommand(0x10);                   // DATA_START_TRANSMISSION_1  
+    delay(2);
+    return 0;
+}  
+
+int EPD_Init_5in83_V2() 
+{
+    EPD_Reset();
+
+    EPD_Send_4(0x01, 0x07, 0x07, 0x3f, 0x3f);            // POWER_SETTING 
+	
+    EPD_SendCommand(0x04);                    // POWER_ON
+    delay(100);
+    EPD_WaitUntilIdle();
+	
+    EPD_Send_1(0x00, 0x1F);            // PANEL_SETTING
+	EPD_Send_4(0x61, 0x02, 0x88, 0x01, 0xE0);// TCON_RESOLUTION
+    EPD_Send_1(0X15, 0x00);                  
+    EPD_Send_2(0X50, 0x10, 0x07);               
+    EPD_Send_1(0X60, 0x22);               
+	
+    EPD_SendCommand(0x10);                   // DATA_START_TRANSMISSION_1  
+	for(UWORD i=0; i<38880; i++) {
+		EPD_SendData(0x00);
+	}
+    EPD_SendCommand(0x13);                   // DATA_START_TRANSMISSION_2
     delay(2);
     return 0;
 }  

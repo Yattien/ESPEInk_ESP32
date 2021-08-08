@@ -1,13 +1,13 @@
 /**
-  ******************************************************************************
-  * @file    scripts.h
-  * @author  Waveshare Team
-  * @version V1.0.0
-  * @date    23-January-2018
-  * @brief   This file describes the sending of JavaScript codes to a client
-  *
-  ******************************************************************************
-  */ 
+******************************************************************************
+* @file    scripts.h
+* @author  Waveshare Team
+* @version V1.0.0
+* @date    23-January-2018
+* @brief   This file describes the sending of JavaScript codes to a client
+*
+******************************************************************************
+*/
 
 void sendJS_A(WiFiClient client)
 {
@@ -67,7 +67,7 @@ client.println(
     "srcBox.ondrop=drop;\r\n"
     "srcImg=0;\r\n"
     "epdInd=0;\r\n"
-  
+
 "palArr=[[[0,0,0],[255,255,255]],\r\n"
 "[[0,0,0],[255,255,255],[127,0,0]],\r\n"
 "[[0,0,0],[255,255,255],[127,127,127]],\r\n"
@@ -87,8 +87,10 @@ client.println(
 "[800,480,0],[800,480,1],[880,528,1],\r\n"
 "[600,448,7],[880,528,0],[280,480,0],\r\n"
 "[152,296,0],[648,480,1],[128,296,1],\r\n"
-"[200,200,1],[104,214,1]];\r\n"
-  
+"[200,200,1],[104,214,1],[128,296,0],\r\n"
+"[400,300,1],[152,296,1],[648,480,0],\r\n"
+"[640,400,7],[176,264,1]];\r\n"
+
 "setInn('BT',\r\n"
 "Btn(0,'Select image file','processFiles(this.files);')+\r\n"
 "Btn(1,'Level: mono','procImg(true,false);')+\r\n"
@@ -108,8 +110,10 @@ client.println(
 "RB(16,'5.83&ensp;')+RB(17,'5.83b')+RB(18,'5.83c<br>')+\r\n"
 "RB(19,'7.5&ensp;&ensp;')+RB(20,'7.5b&ensp;')+RB(21,'7.5c&ensp;<br>')+\r\n"
 "RB(22,'7.5 V2')+RB(23,'7.5b V2<br>')+ RB(24,'7.5b HD')+\r\n"
-"RB(25,'5.65f<br>') + RB(26,'7.5 HD') + RB(27,'3.7<br>') + RB(28,'2.66') + RB(29,'5.83b V2<br>')+\r\n"
-"RB(30,'2.9b V2') + RB(31,'1.54b V2<br>') + RB(32,'2.13b V3'));\r\n"
+"RB(25,'5.65f<br>')+RB(26,'7.5 HD')+RB(27,'3.7<br>')+RB(28,'2.66')+RB(29,'5.83b V2<br>')+\r\n"
+"RB(30,'2.9b V3')+RB(31,'1.54b V2<br>')+RB(32,'2.13b V3')+RB(33,'2.9 V2<br>')+\r\n"
+"RB(34,'4.2b V2')+RB(35,'2.66b<br>')+RB(36,'5.83 V2')+RB(37,'4.01 f<br>')+\r\n"
+"RB(38,'2.7b V2'));\r\n"
 "}\r\n"
 //-------------------------------------------
 "function rbClick(index){\r\n"
@@ -405,7 +409,7 @@ client.println(
     "var a=new Array(w*h);\r\n"
     "var i=0;\r\n"
     "for(var y=0;y<h;y++)for(var x=0;x<w;x++,i++) {\r\n"
-		"if(epdInd==25)\r\n"
+		"if(epdInd==25 || epdInd==37)\r\n"
 			"a[i]=getVal_7color(p,i<<2);\r\n"
 		"else\r\n"
 			"a[i]=getVal(p,i<<2);\r\n"
@@ -440,7 +444,7 @@ client.println(
         "return u_send('EPD'+String.fromCharCode(epdInd+97)+'_',false);\r\n"
     "}\r\n"
   
-  "if (epdInd>15 && epdInd < 22)\r\n"
+	"if (epdInd>15 && epdInd < 22)\r\n"
     "{\r\n"
         "xhReq.onload=xhReq.onerror=function()\r\n"
         "{\r\n"
@@ -449,15 +453,19 @@ client.println(
         "};\r\n"
         "return u_send('EPD'+String.fromCharCode(epdInd+97)+'_',false);\r\n"   
     "}\r\n"
-    "if (epdInd == 25)\r\n"
+	
+    "if (epdInd == 25 || epdInd == 37)\r\n"
     "{\r\n"
         "xhReq.onload=xhReq.onerror=function()\r\n"
         "{\r\n"
             "if(stInd==0)return u_data(a,-2,0,100);\r\n"
             "if(stInd==1)return u_done();\r\n"
         "};\r\n"
-        "return u_send('EPD'+String.fromCharCode(epdInd+97)+'_',false);\r\n"  
+		"if(epdInd>25)\r\n"
+			"return u_send('EPD'+String.fromCharCode(epdInd+-26+65)+'_',false);\r\n"
+        "return u_send('EPD'+String.fromCharCode(epdInd+97)+'_',false);\r\n"
     "}\r\n"
+	
     "else\r\n"
     "{\r\n"
         "xhReq.onload=xhReq.onerror=function()\r\n"

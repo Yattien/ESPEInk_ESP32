@@ -1,1 +1,10 @@
 .project
+Loader_esp32wf.ino
+Version_CN.txt
+Version_EN.txt
+app-release.apk
+
+Loader_esp32bt/
+Loader_esp32wf/
+ePape_Esp32_Loader_APP/
+examples/

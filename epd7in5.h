@@ -134,6 +134,12 @@ int EPD_7in5B_V2_Init(void)
     EPD_SendCommand(0X60);			//TCON SETTING
     EPD_SendData(0x22);
 
+    EPD_SendCommand(0x65);  // Resolution setting
+    EPD_SendData(0x00);
+    EPD_SendData(0x00);//800*480
+    EPD_SendData(0x00);
+    EPD_SendData(0x00);
+	
     UWORD i;
     EPD_SendCommand(0x10);
     for(i=0; i<800 / 8 *480; i++) {

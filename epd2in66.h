@@ -93,3 +93,43 @@ int EPD_2IN66_Init(void)
 	return 0;
 }
 
+/******************************************************************************
+function :	Initialize the e-Paper register
+parameter:
+******************************************************************************/
+int EPD_2IN66B_Init(void)
+{
+    EPD_Reset();
+    EPD_2IN66_ReadBusy();
+    EPD_SendCommand(0x12);//soft  reset
+    EPD_2IN66_ReadBusy();
+
+	EPD_SendCommand(0x11); //data entry mode       
+	EPD_SendData(0x03);
+
+    EPD_SendCommand(0x44); // SET_RAM_X_ADDRESS_START_END_POSITION
+    EPD_SendData((0>>3) & 0x1F);
+    EPD_SendData(((EPD_2IN66_WIDTH-1)>>3) & 0x1F);
+	
+    EPD_SendCommand(0x45); // SET_RAM_Y_ADDRESS_START_END_POSITION
+    EPD_SendData(0 & 0xFF);
+    EPD_SendData((0 >> 8) & 0x01);
+    EPD_SendData((EPD_2IN66_HEIGHT-1) & 0xFF);
+    EPD_SendData(((EPD_2IN66_HEIGHT-1) >> 8) & 0x01);
+	
+	EPD_SendCommand(0x21); //  Display update control
+	EPD_SendData(0x00);
+	EPD_SendData(0x80);	
+
+    EPD_SendCommand(0x4E); // SET_RAM_X_ADDRESS_COUNTER
+    EPD_SendData(0 & 0x1F);
+
+    EPD_SendCommand(0x4F); // SET_RAM_Y_ADDRESS_COUNTER
+    EPD_SendData(0 & 0xFF);
+    EPD_SendData((0 >> 8) & 0x01);
+	EPD_2IN66_ReadBusy();
+	
+	EPD_SendCommand(0x24);//show
+	
+	return 0;
+}

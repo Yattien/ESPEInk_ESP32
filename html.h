@@ -17,6 +17,7 @@ client.print(
 "<head>\r\n"
 "<meta charset='utf-8'>\r\n"
 "<title>PriceTag</title>\r\n"
+"<link rel='icon' href='data:;base64,='>\r\n"
 "<link rel='stylesheet' href='styles.css'>\r\n"
 "<script src='scriptA.js'></script>\r\n"
 "<script src='scriptB.js'></script>\r\n"

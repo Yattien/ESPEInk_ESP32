@@ -1,5 +1,8 @@
 # Changelog
 
+## Version v8
+- Updated waveshare code
+
 ## Version v7
 - removed fingerprint parameter
 

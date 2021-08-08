@@ -170,3 +170,34 @@ int EPD_Init_2in7b()
    
     return 0;
 }
+
+int EPD_Init_2in7b_V2(void)
+{
+	EPD_Reset();
+	
+	EPD_WaitUntilIdle_high();
+	EPD_SendCommand(0x12);
+	EPD_WaitUntilIdle_high();
+	
+	EPD_Send_3(0x00, 0x27, 0x01, 0x00);
+	EPD_Send_1(0x11, 0x03);
+	
+	EPD_Send_2(0x44, 0x00, 0x15);
+	EPD_Send_4(0x45, 0x00, 0x00, 0x7, 0x1);
+	
+	EPD_Send_1(0x4e, 0x00);
+	EPD_Send_2(0x4f, 0x00, 0x00);
+	
+	EPD_SendCommand(0x24);
+	return 0;
+}
+
+void EPD_Show_2in7b_V2(void)
+{
+	EPD_SendCommand(0x20);
+	EPD_WaitUntilIdle_high();
+	
+	delay(200);
+	EPD_Send_1(0x10, 0x01);
+}
+

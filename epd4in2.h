@@ -141,3 +141,29 @@ int EPD_Init_4in2b()
     delay(2);
     return 0;
 }
+
+int EPD_Init_4in2b_V2() 
+{
+    EPD_Reset();
+
+    EPD_SendCommand(0x04); 
+    EPD_WaitUntilIdle();
+    EPD_Send_1(0x00, 0x0F);//PANEL_SETTING
+
+    EPD_SendCommand(0x10);//DATA_START_TRANSMISSION_1  
+    delay(2);
+    return 0;
+}
+
+void EPD_4IN2B_V2_Show(void)
+{
+    EPD_SendCommand(0x12); // DISPLAY_REFRESH
+    delay(100);
+    EPD_WaitUntilIdle();
+	
+    EPD_Send_1(0X50, 0xf7);
+    EPD_SendCommand(0X02);  	//power off
+    EPD_WaitUntilIdle(); //waiting for the electronic paper IC to release the idle signal
+    EPD_Send_1(0X07, 0xf7);  	//deep sleep
+}
+
