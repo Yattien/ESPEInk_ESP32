@@ -7,7 +7,7 @@ Erweiterung des ESP32-Waveshare-Treibers um Wifi-Einrichtungsassistent, Deepslee
 ![Open Issues](https://img.shields.io/github/issues-raw/Yattien/ESPEInk_ESP32)
 
 # Waveshare-Treiberversion
-[29.10.2020](https://www.waveshare.com/wiki/File:E-Paper_ESP32_Driver_Board_Code.7z)
+[07.11.2022](https://www.waveshare.com/wiki/File:E-Paper_ESP32_Driver_Board_Code.7z)
 
 # Installation
 Das fertige Image kann per OTA (siehe auch OTA-Beispiel-Sketche) oder auch per [`esptool`](https://github.com/espressif/esptool) auf den ESP32 geladen werden.
