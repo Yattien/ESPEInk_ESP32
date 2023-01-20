@@ -33,13 +33,9 @@ Das fertige Image kann per OTA (siehe auch OTA-Beispiel-Sketche) oder auch per [
   - Funktioniert nicht :warning: standalone, benötigt also eine eingerichtete FHEM-Gegenseite
 
 # Abhängigkeiten
-Da ich bereits viele Libs in meiner Arduino-Bauumgebung habe und diese somit nicht mehr "clean" ist, können es auch mehr Abhängigkeiten sein, die zusätzlich installiert werden müssen. Für Tipps bin ich dankbar :)
-
-* ArduinoJSON >=6
-* [WifiManager-ESP32](https://github.com/Brunez3BD/WIFIMANAGER-ESP32)
-* [DNSServer-ESP32](https://github.com/zhouhan0126/DNSServer---esp32)
-* [WebServer-ESP32](https://github.com/zhouhan0126/WebServer-esp32)
-* ?
+* [ArduinoJSON](https://github.com/bblanchon/ArduinoJson) >=6
+* [WiFiManager](https://github.com/tzapu/WiFiManager)
+* [PubSubClient](https://github.com/knolleary/pubsubclient)
 
 # Pin-Belegung ESP32 Devkit v1
 e-Paper HAT|GPIO ESP32
