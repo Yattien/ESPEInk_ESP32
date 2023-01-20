@@ -574,7 +574,7 @@ struct EPD_dispInfo
 /* Array of sets describing the usage of e-Papers ----------------------------*/
 EPD_dispInfo EPD_dispMass[] =
 {
-    { EPD_Init_1in54,		EPD_loadA,		-1  ,	0,				EPD_showA,			"1.54 inch"		},// a 0
+    { EPD_Init_1in54,		EPD_loadA,		-1  ,	0,				EPD_1IN54_Show,			"1.54 inch"		},// a 0
     { EPD_Init_1in54b,		EPD_loadB,		0x13,	EPD_loadA,		EPD_showB,			"1.54 inch b"	},// b 1
     { EPD_Init_1in54c,		EPD_loadA,		0x13,	EPD_loadA,		EPD_showB,			"1.54 inch c"	},// c 2
     { EPD_Init_2in13,		EPD_loadC,		-1  ,	0,				EPD_showA,			"2.13 inch"		},// d 3
@@ -613,6 +613,8 @@ EPD_dispInfo EPD_dispMass[] =
 	{ EPD_Init_5in83_V2,	EPD_loadAFilp,	-1,		0,				EPD_showC,			"5.83 inch V2"	},// 36
 	{ EPD_4IN01F_init,		EPD_loadG,		-1,		0,				EPD_4IN01F_Show,	"4.01 inch f"	},// 37
 	{ EPD_Init_2in7b_V2,	EPD_loadA,		0x26,	EPD_loadAFilp,	EPD_Show_2in7b_V2,	"2.7 inch B V2"	},// 38
+	{ EPD_Init_2in13_V3,	EPD_loadC,		-1, 	0, 				EPD_2IN13_V3_Show, 	"2.13 inch V3"	},// 39
+	{ EPD_2IN13B_V4_Init,	EPD_loadA,		0x26,	EPD_loadA,		EPD_2IN13B_V4_Show, "2.13 inch B V4"},// 40
 };
 
 /* Initialization of an e-Paper ----------------------------------------------*/

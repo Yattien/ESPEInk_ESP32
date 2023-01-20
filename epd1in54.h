@@ -80,6 +80,31 @@ int EPD_Init_1in54()
     return 0;
 }
 
+void EPD_1IN54_Show(void)
+{
+	int EPD1in54 = 2;
+	if(EPD1in54 == 1) {
+		Serial.print("\r\n EPD_1IN54_Show");
+		// Refresh
+		EPD_Send_1(0x22, 0xC4);// DISPLAY_UPDATE_CONTROL_2
+		EPD_SendCommand( 0x20);// MASTER_ACTIVATION
+		EPD_SendCommand( 0xFF);// TERMINATE_FRAME_READ_WRITE
+		EPD_WaitUntilIdle();
+
+		// Sleep
+		EPD_SendCommand(0x10);// DEEP_SLEEP_MODE
+		EPD_WaitUntilIdle();
+	}
+	else {
+		Serial.print("\r\n EPD_1IN54_V2_Show");
+		EPD_Send_1(0x22, 0xc7); //Display Update Control
+		EPD_SendCommand(0x20); //Activate Display Update Sequence
+		EPD_WaitUntilIdle();
+	
+		EPD_Send_1(0x10, 0x01);
+	}
+}
+
 int EPD_Init_1in54b()
 {
     EPD_Reset();
