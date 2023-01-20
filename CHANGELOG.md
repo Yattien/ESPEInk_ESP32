@@ -1,5 +1,8 @@
 # Changelog
 
+## Version v9
+- Updated waveshare code to 07.11.2022 (supports 2in13 v3, 2in13b v4)
+
 ## Version v8
 - Updated waveshare code
 
